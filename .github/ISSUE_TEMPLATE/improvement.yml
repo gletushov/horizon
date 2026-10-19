@@ -1,0 +1,16 @@
+name: Предложение
+description: Какого результата не хватает
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Что ты пытаешься сделать
+      description: В какой момент текущий способ мешает работе?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Какой результат нужен
+    validations:
+      required: true

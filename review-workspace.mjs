@@ -114,7 +114,11 @@ export class ReviewWorkspace {
  note(input){
   const value=text(input.text,'заметка');if(!value.trim())fail('Напишите мысль');
   const project=this.workspace.roots().find(p=>p.id===(input.projectId??null));if(!project)fail('Проект не подключён',404);
-  const relative=project.prefix+'letushv/inbox.md';let doc;try{doc=this.workspace.read(relative);}catch(error){if(error.status!==404)throw error;}
+  let relative=project.prefix+'notes/inbox.md',doc;
+  try{doc=this.workspace.read(relative);}catch(error){
+   if(error.status!==404)throw error;
+   try{doc=this.workspace.read(project.prefix+'letushv/inbox.md');relative=doc.path;}catch(legacyError){if(legacyError.status!==404)throw legacyError;}
+  }
   const entry='\n\n## '+new Date().toISOString()+'\n\n'+value+'\n';
   const saved=doc?this.workspace.save(relative,doc.revision,doc.content+entry):this.workspace.create(relative,'# Inbox\n'+entry);
   return {path:saved.path,revision:saved.revision};

@@ -16,10 +16,10 @@ function writePlan(store,doc,revision,content) {
 }
 export function readDay(store,date) {
   if(!P.dateValid(date))fail('Некорректная дата.');
-  const doc=readPlan(store,`planner/days/${date}.md`);return {...doc,date,note:P.dayNote(doc.content),timeZone:'Europe/Samara'};
+  const doc=readPlan(store,`planner/days/${date}.md`);return {...doc,date,note:P.dayNote(doc.content),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone};
 }
 export function saveDay(store,{date,revision,note}) {
-  noteValid(note);const doc=readDay(store,date);const saved=writePlan(store,doc,revision,P.setDayNote(doc.content,note));return {...saved,date,note:P.dayNote(saved.content),timeZone:'Europe/Samara'};
+  noteValid(note);const doc=readDay(store,date);const saved=writePlan(store,doc,revision,P.setDayNote(doc.content,note));return {...saved,date,note:P.dayNote(saved.content),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone};
 }
 export function editTask(store,data) {
   const {path,revision,id,index,childIndex,childId,createId,addChildId,action}=data;

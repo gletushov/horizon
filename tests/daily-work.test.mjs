@@ -90,7 +90,7 @@ test('one continuous note survives reload, adds newest first, deduplicates retry
 test('note capture rejects empty input and never erases a pre-existing unstructured document',async t=>{
  const f=await fixture(t);let r=await f.request('/api/notes');assert.equal(r.status,200);
  assert.equal((await f.request('/api/notes',{action:'add',revision:r.body.revision,id:'33333333-3333-4333-8333-333333333333',text:'  '})).status,400);
- fs.mkdirSync(path.join(f.root,'letushv'));fs.writeFileSync(path.join(f.root,r.body.path),'# Older note\n\nKeep this text.\n');
+ fs.mkdirSync(path.dirname(path.join(f.root,r.body.path)),{recursive:true});fs.writeFileSync(path.join(f.root,r.body.path),'# Older note\n\nKeep this text.\n');
  r=await f.request('/api/notes');const added=await f.request('/api/notes',{action:'add',revision:r.body.revision,id:'33333333-3333-4333-8333-333333333333',text:'New thought'});
  assert.equal(added.status,200);assert.match(fs.readFileSync(path.join(f.root,r.body.path),'utf8'),/Keep this text\./);
 });

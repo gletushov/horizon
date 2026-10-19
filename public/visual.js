@@ -63,7 +63,6 @@ function renderVisual(doc) {
   session.notify = () => { if (generation !== visualGeneration || !article.isConnected) return; status(root.querySelector('#visual-status'), session.error ? 'Не сохранено' : session.inflight ? 'Сохраняется…' : session.dirty() ? 'Есть изменения…' : 'Сохранено', Boolean(session.error)); root.querySelector('.visual-error').textContent = session.error?.message || ''; };
   for (const piece of pieces) {
     const token = piece.token; if (!token || token.type === 'space') continue;
-    if (doc.path === 'reviews/agent-overview.md' && token.type === 'paragraph' && token.text.startsWith('Horizon, Наука и Рэйти:')) continue;
     if (token.type === 'table') { renderEditableTable(piece, article, doc, session, commit); continue; }
     const block = document.createElement('div'); block.className = 'visual-block'; const array = [token]; array.links = piece.links; block.innerHTML = cleanHtml(marked.parser(array)); article.append(block);
     writable(block, token.type === 'heading' ? 'Заголовок документа' : 'Текст документа', () => { const raw = markdownWriter.turndown(cleanHtml(block.innerHTML)); const ending = piece.raw.match(/\s*$/)?.[0] || ''; piece.raw = raw + (ending.includes('\n') ? ending : '\n\n'); commit(); }, session);
@@ -98,7 +97,7 @@ function tableSchema(doc, bodyLines) {
   const provided = doc.reviewSchema;
   const firstIds = bodyLines.slice(2).map(source => source.parts[source.offset]?.trim().match(/^([RT]\d+)\b/)?.[1]).filter(Boolean);
   const v2 = provided?.version === 2 || firstIds.some(id => id.startsWith('T')) || bodyLines.some(source => source.parts.length - source.offset * 2 === 4);
-  const columns = provided?.columns?.length ? provided.columns : (v2 ? [{key:'task', label:'Task / session', index:0, owner:'agent'}, {key:'summary', label:'Summary / purpose', index:1, owner:'agent'}, {key:'updates', label:'Latest updates / next action', index:2, owner:'agent'}, {key:'comment', label:'Letushv comments and decisions', index:3, owner:'user'}] : [{key:'theme', label:'Theme', index:0, owner:'agent'}, {key:'agent', label:'Agent comment', index:1, owner:'agent'}, {key:'comment', label:'Letushv comment', index:2, owner:'user'}]);
+  const columns = provided?.columns?.length ? provided.columns : (v2 ? [{key:'task', label:'Task / session', index:0, owner:'agent'}, {key:'summary', label:'Summary / purpose', index:1, owner:'agent'}, {key:'updates', label:'Latest updates / next action', index:2, owner:'agent'}, {key:'comment', label:'Your comments and decisions', index:3, owner:'user'}] : [{key:'theme', label:'Theme', index:0, owner:'agent'}, {key:'agent', label:'Agent comment', index:1, owner:'agent'}, {key:'comment', label:'Your comment', index:2, owner:'user'}]);
   const userColumnIndex = Number.isInteger(provided?.userColumnIndex) ? provided.userColumnIndex : v2 ? 3 : 2;
   const agentIndex = columns.findIndex(column => column.owner === 'agent' && (column.key === 'updates' || column.key === 'agent')); return {v2, columns, userColumnIndex, agentIndex:agentIndex >= 0 ? agentIndex : v2 ? 2 : 1, idPrefix:provided?.idPrefix || (v2 ? 'T' : 'R')};
 }

@@ -562,8 +562,8 @@ function inlineTreeFile({mode = 'create', view = 'docs', selected = null, doc = 
   const dirname = path => String(path || '').split('/').slice(0, -1).join('/');
   const currentRelativePath = relativePath(isRename ? doc : selected);
   const currentRoot = currentRelativePath.split('/')[0];
-  const initialFolder = ['letushv', 'inbox'].includes(currentRoot) ? dirname(currentRelativePath) : '';
-  const defaultFolder = initialFolder || (!isRename && view === 'inbox' ? 'inbox' : 'letushv');
+  const initialFolder = ['notes', 'letushv', 'inbox'].includes(currentRoot) ? dirname(currentRelativePath) : '';
+  const defaultFolder = initialFolder || 'notes';
   const foldersFor = project => {
     const projectPrefix = project?.prefix || '';
     const folders = new Set(['']);
@@ -889,7 +889,7 @@ document.addEventListener('click', async event => {
   if(/^#(?:docs|agents|inbox)(?:[?]|$)/.test(href)||link.closest('[data-planner-path]') && href.startsWith('#')) return;
   if (/^codex:\/\/threads\/[0-9a-f-]{36}$/i.test(href)) return;
   if (/^https?:\/\//i.test(href)) { link.target = '_blank'; link.rel = 'noopener noreferrer'; return; }
-  event.preventDefault(); const current = link.closest('[data-planner-path]')?.dataset.plannerPath || activeDoc?.path || 'planner/day.md'; const relative = href.replace(/^\/Users\/letushv\/Projects\/LetHorizon\//, ''); const target=HorizonEditor.documentLink(current,relative);if(!target)return toast('Ссылка выходит за пределы проекта.');const normalized=target.path; let found = catalogue.find(doc => doc.sourcePath === href || doc.path === relative || doc.path === normalized);
+  event.preventDefault(); const current = link.closest('[data-planner-path]')?.dataset.plannerPath || activeDoc?.path || 'planner/day.md'; const relative = href; const target=HorizonEditor.documentLink(current,relative);if(!target)return toast('Ссылка выходит за пределы проекта.');const normalized=target.path; let found = catalogue.find(doc => doc.sourcePath === href || doc.path === relative || doc.path === normalized);
   if (!found) { try { await refreshCatalogue(); found = catalogue.find(doc => doc.sourcePath === href || doc.path === relative || doc.path === normalized); } catch (error) { toast(error.message); return; } }
   if (found) {if(found.path===activeDoc?.path&&target.heading){history.pushState(null,'',documentRoute(found.path,target.heading));revealDocumentHeading(target.heading);}else location.hash=documentRoute(found.path,target.heading);} else toast('Этот файл или ссылка пока не подключены к просмотрщику.');
 });
@@ -944,11 +944,11 @@ async function renderInbox(version) {
   const host=main.querySelector('.personal-projects');
   for(const project of projectRoots){
     const section=document.createElement('section');section.className='personal-project';const h=document.createElement('h2');h.textContent=project.name;section.append(h);
-    const prefix=project.prefix||'',files=catalogue.filter(doc=>doc.projectId===project.id&&(doc.path.slice(prefix.length).startsWith('letushv/')||(!project.id&&doc.path.startsWith('inbox/'))));
+    const prefix=project.prefix||'',files=catalogue.filter(doc=>doc.projectId===project.id&&(doc.path.slice(prefix.length).startsWith('notes/')||doc.path.slice(prefix.length).startsWith('letushv/')||(!project.id&&doc.path.startsWith('inbox/'))));
     files.sort((a,b)=>Number(!a.path.endsWith('/inbox.md'))-Number(!b.path.endsWith('/inbox.md'))||a.title.localeCompare(b.title));
     for(const doc of files){const link=document.createElement('a');link.href='#inbox?'+encodeURIComponent(doc.path);link.textContent=doc.title;section.append(link);}
     if(!files.length){const empty=document.createElement('p');empty.textContent='Пока нет заметок';section.append(empty);}
-    const add=document.createElement('button');add.className='text-button';add.textContent='+ New note';add.onclick=()=>createDocument('docs',{path:prefix+'letushv/inbox.md',projectId:project.id});section.append(add);host.append(section);
+    const add=document.createElement('button');add.className='text-button';add.textContent='+ New note';add.onclick=()=>createDocument('docs',{path:prefix+'notes/inbox.md',projectId:project.id});section.append(add);host.append(section);
   }
 }
 const resultReadPending=new Set();
