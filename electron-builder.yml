@@ -1,0 +1,40 @@
+appId: io.github.gletushov.horizon
+productName: Horizon
+artifactName: Horizon-${version}-${arch}.${ext}
+directories:
+  output: dist
+  buildResources: desktop/assets
+files:
+  - '*.mjs'
+  - desktop/*.mjs
+  - scripts/agent-session.mjs
+  - scripts/review-agent.mjs
+  - scripts/document-comments.mjs
+  - scripts/init-project.mjs
+  - from: desktop/agent-tools
+    to: skills/table-review
+    filter: [SKILL.md]
+  - public/**/*
+  - package.json
+  - LICENSE
+  - THIRD_PARTY_NOTICES.md
+asar: false
+mac:
+  category: public.app-category.productivity
+  icon: desktop/assets/icon.icns
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  identity: '-'
+  hardenedRuntime: false
+  minimumSystemVersion: '13.0'
+dmg:
+  contents:
+    - x: 130
+      y: 180
+    - x: 410
+      y: 180
+      type: link
+      path: /Applications

@@ -1,0 +1,30 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {WorkspaceStore} from '../workspace-store.mjs';
+
+test('explicit new tasks share a session; linking and closing preserve content', t => {
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'horizon-registration-'));
+ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ fs.mkdirSync(path.join(root,'reviews'));
+ fs.writeFileSync(path.join(root,'reviews/agent-overview.md'),'# Tasks\n\n| Task / session | Summary / purpose | Latest updates / next action | Letushv comments and decisions |\n|---|---|---|---|\n');
+ const store=new WorkspaceStore(root), input={projectId:null,provider:'codex',sessionId:'same-session',taskTitle:'First'};
+ const first=store.registerAgentSession(input);
+ const second=store.registerAgentSession({...input,mode:'create',taskTitle:'Second task',summary:'Build the second thing'});
+ assert.notEqual(second.taskId,first.taskId);
+ assert.match(second.instruction,/Second task/);
+ assert.match(second.instruction,/Build the second thing/);
+ const linked=store.registerAgentSession({...input,taskId:second.taskId});
+ assert.equal(linked.taskId,second.taskId);
+ let doc=store.local.read('reviews/agent-overview.md');
+ const content=doc.content;
+ doc=store.local.rowState(doc.path,doc.revision,second.taskId,'closed');
+ assert.equal(doc.rows.find(r=>r.id===second.taskId).status,'closed');
+ assert.equal(doc.content,content);
+ doc=store.local.rowState(doc.path,doc.revision,second.taskId,'working');
+ assert.equal(doc.rows.find(r=>r.id===second.taskId).status,'working');
+ assert.equal(doc.content,content);
+ assert.equal(doc.rows.length,2);
+});

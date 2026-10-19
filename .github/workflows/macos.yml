@@ -1,0 +1,36 @@
+name: macOS
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Check packaged app
+        run: |
+          if [ "$(uname -m)" = "arm64" ]; then
+            npm run test:desktop -- dist/mac-arm64/Horizon.app/Contents/MacOS/Horizon
+          else
+            npm run test:desktop -- dist/mac/Horizon.app/Contents/MacOS/Horizon
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Horizon-macOS
+          path: |
+            dist/*.dmg
+            dist/*.zip
