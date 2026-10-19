@@ -1,0 +1,39 @@
+name: Publish macOS release
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful macOS workflow run containing Horizon-macOS artifacts
+        required: true
+      version:
+        description: Release tag
+        default: v0.1.0
+        required: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.run_id }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Download verified build and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ ]]
+          [[ "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .conclusion)" = success ]]
+          BUILD_SHA=$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)
+          gh run download "$BUILD_RUN" --name Horizon-macOS --dir dist
+          cd dist
+          sha256sum *.dmg *.zip > SHA256SUMS.txt
+          if ! gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release create "$VERSION" --draft --target "$BUILD_SHA" --title "Horizon $VERSION — macOS" --notes 'macOS 13+. arm64: Apple Silicon; x64: Intel. Ad-hoc signed; Apple notarization is not included. See README for installation.'
+          fi
+          gh release upload "$VERSION" ./*.dmg ./*.zip SHA256SUMS.txt --clobber
+          gh release edit "$VERSION" --draft=false --latest
