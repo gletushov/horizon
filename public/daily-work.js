@@ -66,7 +66,7 @@ function mountImageInsertion(element,current){
 }
 function imagePicker(element,current){const input=document.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/gif,image/webp';input.multiple=true;input.onchange=()=>insertDocumentImages(element,[...input.files],current);input.click();}
 
-function noteStamp(value){const date=new Date(value);return new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Samara',day:'numeric',month:'long',year:'numeric'}).format(date).replace(/ г\.$/,'')+' · '+new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Samara',hour:'2-digit',minute:'2-digit'}).format(date);}
+function noteStamp(value){const date=new Date(value);return new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(date).replace(/ г\.$/,'')+' · '+new Intl.DateTimeFormat('ru-RU',{hour:'2-digit',minute:'2-digit'}).format(date);}
 async function renderContinuousNote(version){
  const data=await api('/api/notes');if(version!==routeVersion)return;
  delete main.dataset.documentView;activeDoc=null;main.classList.add('notes-host');
@@ -84,10 +84,10 @@ async function renderContinuousNote(version){
   const link='['+label+']('+url+')';state=current.text.includes(link)?fresh:await api('/api/notes',{action:'edit',revision:fresh.revision,id:entry.id,text:current.text+'\n\n'+link});draw();
  }
  async function noteActions(entry,article){
-  const panel=HorizonDialogs.open('Запись от '+new Date(entry.createdAt).toLocaleString('ru-RU',{timeZone:'Europe/Samara'}),'<div class="note-actions"><button class="button" data-edit>Редактировать</button><button class="button" data-copy>Скопировать</button><button class="button" data-document>Сохранить как документ</button><button class="button" data-task>Создать задачу</button></div><p role="status"></p>');
+  const panel=HorizonDialogs.open('Запись от '+new Date(entry.createdAt).toLocaleString('ru-RU',{}),'<div class="note-actions"><button class="button" data-edit>Редактировать</button><button class="button" data-copy>Скопировать</button><button class="button" data-document>Сохранить как документ</button><button class="button" data-task>Создать задачу</button></div><p role="status"></p>');
   panel.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(entry.text);panel.querySelector('[role=status]').textContent='Скопировано';}catch(e){panel.querySelector('[role=status]').textContent=e.message;}};
   panel.querySelector('[data-edit]').onclick=()=>{panel.close();const content=article.querySelector('.continuous-note-content'),original=entry.text,stash=draft('note-edit:'+entry.id);content.innerHTML=md(stash?.content??original);mountImageInsertion(content,state.path);let value=stash?.content??original;HorizonRichText.mount(content,'Текст записи',text=>{value=text;keepDraft('note-edit:'+entry.id,{content:text});},()=>{});const actions=document.createElement('div');actions.className='inline-actions';actions.innerHTML='<button class="button" data-cancel>Отмена</button><button class="button primary" data-save>Сохранить</button><span role="status"></span>';article.append(actions);actions.querySelector('[data-cancel]').onclick=()=>{clearDraft('note-edit:'+entry.id);draw();};actions.querySelector('[data-save]').onclick=async()=>{try{state=await api('/api/notes',{action:'edit',revision:state.revision,id:entry.id,text:value});clearDraft('note-edit:'+entry.id);draw();}catch(e){actions.querySelector('[role=status]').textContent=e.message;}};content.focus();};
-  panel.querySelector('[data-document]').onclick=()=>{panel.close();let created=null;formInline('Сохранить как документ',field('path','Путь','letushv/thought-'+entry.id.slice(0,8)+'.md'),async fields=>{
+  panel.querySelector('[data-document]').onclick=()=>{panel.close();let created=null;formInline('Сохранить как документ',field('path','Путь',state.path.slice(0,state.path.lastIndexOf('/')+1)+'thought-'+entry.id.slice(0,8)+'.md'),async fields=>{
    created||=await api('/api/create',{path:fields.get('path'),sourcePath:state.path,content:entry.text+'\n'});
    try{await linkNote(entry,'Документ',documentRoute(created.path));toast('Документ создан; исходная запись сохранена');}
    catch(error){throw Error('Документ создан: '+created.path+'. Ссылка не сохранена: '+error.message+'. Повтори для добавления ссылки.');}
@@ -104,6 +104,6 @@ async function renderContinuousNote(version){
  input.addEventListener('paste',e=>{const files=[...e.clipboardData.files].filter(f=>f.type.startsWith('image/'));if(files.length){e.preventDefault();captureImages(files);}});
  input.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault();});input.addEventListener('drop',e=>{const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/'));if(files.length){e.preventDefault();captureImages(files);}});
  input.onkeydown=e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();root.querySelector('form').requestSubmit();}};
- for(const doc of catalogue.filter(d=>/(^|\/)(letushv|inbox)\//.test(d.path)&&d.path!==state.path)){const link=document.createElement('a');link.href=documentRoute(doc.path);link.textContent=(doc.projectName||'Horizon')+' / '+doc.title;root.querySelector('.previous-notes div').append(link);}
+ for(const doc of catalogue.filter(d=>/(^|\/)(notes|letushv|inbox)\//.test(d.path)&&d.path!==state.path)){const link=document.createElement('a');link.href=documentRoute(doc.path);link.textContent=(doc.projectName||'Horizon')+' / '+doc.title;root.querySelector('.previous-notes div').append(link);}
  draw();
 }

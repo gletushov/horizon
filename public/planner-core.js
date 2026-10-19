@@ -2,7 +2,7 @@
 (function (host) {
   const colors = ['green','yellow','blue','pink','purple','neutral'];
   const dateValid = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' && value <= '9999-12-31' && !Number.isNaN(Date.parse(value)) && new Date(value+'T12:00:00Z').toISOString().slice(0,10) === value;
-  const today = (now = new Date()) => new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Samara',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  const today = (now = new Date()) => new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
   const shiftDate = (date, days) => {const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);};
   const isPath = value => typeof value === 'string' && (/^planner\/(day|week|month|quarter|year|future|life)\.md$/.test(value) || /^planner\/days\/(\d{4}-\d{2}-\d{2})\.md$/.test(value) && dateValid(value.slice(13,-3)));
   const parseMeta = line => {

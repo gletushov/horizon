@@ -1,5 +1,5 @@
 let workspaceFolders=[];
-const documentFolderName=value=>({agents:'Agents',letushv:'Letushv'})[value]||value;
+const documentFolderName=value=>({agents:'Agents',notes:'Заметки',letushv:'Заметки'})[value]||value;
 const documentDisplayName=path=>path.split('/').at(-1).replace(/\.md$/i,'');
 const documentMetadata=doc=>documentDisplayName(doc.path)+(doc.modifiedAt?' · '+new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(new Date(doc.modifiedAt)).replace(/ г\.$/,''):'');
 const treeIcon=name=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${({file:'<path d="M5 3h9l5 5v13H5zM14 3v6h5"/>',folder:'<path d="M3 6h7l2 3h9v11H3z"/>',rename:'<path d="m15 4 5 5-11 11H4v-5zM13 6l5 5"/>',move:'<path d="M3 6h7l2 3h9v11H3zM8 14h9m-3-3 3 3-3 3"/>',delete:'<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/>',plus:'<path d="M12 4v16M4 12h16"/>',copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>'})[name]||''}</svg>`;
@@ -119,7 +119,7 @@ async function renderDocuments(view,path,version) {
     for(const project of projectRoots){
       const prefix=project.prefix||'',rootPath=prefix.replace(/\/$/,''),root={path:rootPath,children:new Map(),files:[]};
       const addFolder=relative=>{let node=root;for(const part of relative.split('/').filter(Boolean)){if(!node.children.has(part))node.children.set(part,{path:(node.path?node.path+'/':'')+part,children:new Map(),files:[]});node=node.children.get(part);}return node;};
-      const documents=catalogue.filter(d=>d.projectId===project.id&&(view!=='inbox'||/(^|\/)(letushv|inbox)\//.test(d.path)));
+      const documents=catalogue.filter(d=>d.projectId===project.id&&(view!=='inbox'||/(^|\/)(notes|letushv|inbox)\//.test(d.path)));
       for(const f of workspaceFolders.filter(f=>f.projectId===project.id))if(!search)addFolder(f.path.slice(prefix.length));
       for(const doc of documents){const relative=doc.path.slice(prefix.length),system=/(^|\/)(AGENTS\.md|CLAUDE\.md|SKILL\.md|skills|tests|\.agents)(\/|$)/i.test(relative);if(!showSystem&&system)continue;if(!(doc.title+' '+doc.path).toLowerCase().includes(search))continue;addFolder(folderParent(relative)).files.push(doc);}
       const drawFolder=(node,parent,name,isRoot=false)=>{
@@ -127,7 +127,7 @@ async function renderDocuments(view,path,version) {
         const summary=document.createElement('summary');const label=document.createElement('span');label.className='tree-label';label.innerHTML=(isRoot?'':'<svg class="folder-chevron" width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="m2.5 1.5 2.5 2.5-2.5 2.5" stroke="currentColor" stroke-width="1"/></svg>')+'<span>'+esc(name)+'</span>';summary.append(label);bindTreeRow(summary,{path:node.path,kind:'folder'});details.append(summary);bindTreeDrop(details,node.path);parent.append(details);
         const children=document.createElement('div');children.className='tree-children';details.append(children);
         let drawn=false;const expand=()=>{if(!details.open||drawn)return;drawn=true;
-        for(const [childName,child]of [...node.children].sort(([a],[b])=>{const order=['letushv','agents','docs'];const ai=order.indexOf(a),bi=order.indexOf(b);return (ai<0?99:ai)-(bi<0?99:bi)||a.localeCompare(b);}))drawFolder(child,children,documentFolderName(childName));
+        for(const [childName,child]of [...node.children].sort(([a],[b])=>{const order=['notes','letushv','agents','docs'];const ai=order.indexOf(a),bi=order.indexOf(b);return (ai<0?99:ai)-(bi<0?99:bi)||a.localeCompare(b);}))drawFolder(child,children,documentFolderName(childName));
         for(const doc of node.files){const row=document.createElement('div');row.className='tree-row';const button=document.createElement('button');button.className='document-link'+(doc.path===current?' selected':'');button.dataset.path=doc.path;button.title=doc.path;button.innerHTML='<span>'+esc(documentDisplayName(doc.path))+'</span>';row.append(button);bindTreeRow(row,{path:doc.path,kind:'file'});button.onclick=()=>{rememberDocumentView();if(matchMedia('(max-width:650px)').matches)setTreeHidden(true);location.hash='#'+view+'?'+encodeURIComponent(doc.path);};children.append(row);}
         };expand();
         details.ontoggle=()=>{localStorage.setItem('horizon:group:'+node.path,details.open?'open':'closed');expand();};

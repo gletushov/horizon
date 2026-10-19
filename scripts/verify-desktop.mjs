@@ -59,7 +59,7 @@ try {
   await page.locator('#note-capture').fill('Заметка из настоящего macOS-приложения');
   await page.getByRole('button', {name: 'Добавить', exact: true}).click();
   await page.locator('.continuous-note-entry').waitFor();
-  assert.match(fs.readFileSync(path.join(root, 'letushv/continuous-note.md'), 'utf8'), /настоящего macOS/);
+  assert.match(fs.readFileSync(path.join(root, 'notes/continuous-note.md'), 'utf8'), /настоящего macOS/);
   await page.locator('#note-capture').fill('Несохранённый черновик после перезапуска');
   await page.screenshot({path: path.join(output, 'notes.png')});
   // Closing a macOS window must keep the app/server alive; Dock activation restores it.

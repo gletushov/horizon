@@ -96,7 +96,12 @@ else {
       ]},
       {label: 'Правка', submenu: [{role: 'undo'}, {role: 'redo'}, {type: 'separator'}, {role: 'cut'}, {role: 'copy'}, {role: 'paste'}, {role: 'selectAll'}]},
       {label: 'Вид', submenu: [{role: 'reload'}, {role: 'resetZoom'}, {role: 'zoomIn'}, {role: 'zoomOut'}, {role: 'togglefullscreen'}]},
-      {label: 'Окно', submenu: [{role: 'minimize'}, {role: 'zoom'}, {role: 'front'}]}
+      {label: 'Окно', submenu: [{role: 'minimize'}, {role: 'zoom'}, {role: 'front'}]},
+      {label: 'Справка', submenu: [
+        {label: 'Инструкция', click: () => shell.openExternal('https://github.com/gletushov/horizon/blob/main/docs/getting-started.md')},
+        {label: 'Подключение агентов', click: () => shell.openExternal('https://github.com/gletushov/horizon/blob/main/docs/agents.md')},
+        {label: 'Сообщить об ошибке', click: () => shell.openExternal('https://github.com/gletushov/horizon/issues/new?template=bug_report.yml')}
+      ]}
     ]));
     showWindow();
   }).catch(error => {

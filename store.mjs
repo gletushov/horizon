@@ -15,13 +15,13 @@ const reviewColumns = {
   legacy: [
     {key: 'task', label: 'Theme', index: 0, owner: 'agent'},
     {key: 'updates', label: 'Agent comment', index: 1, owner: 'agent'},
-    {key: 'comment', label: 'Letushv comment', index: 2, owner: 'user'}
+    {key: 'comment', label: 'Your comment', index: 2, owner: 'user'}
   ],
   task: [
     {key: 'task', label: 'Task / session', index: 0, owner: 'agent'},
     {key: 'summary', label: 'Summary / purpose', index: 1, owner: 'agent'},
     {key: 'updates', label: 'Latest updates / next action', index: 2, owner: 'agent'},
-    {key: 'comment', label: 'Letushv comments and decisions', index: 3, owner: 'user'}
+    {key: 'comment', label: 'Your comments and decisions', index: 3, owner: 'user'}
   ]
 };
 const reviewSchema = (kind, labels = []) => {

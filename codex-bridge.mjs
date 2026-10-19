@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {createHash,randomUUID} from 'node:crypto';
+import {findCodexBinary} from './cli-path.mjs';
 const failure=(message,status=503)=>Object.assign(new Error(message),{status});
 export class CodexBridge {
   constructor(root){this.root=root;this.child=null;this.pending=new Map();this.next=1;this.ready=null;this.mode=null;this.error=null;this.records=new Map();}
@@ -11,9 +12,9 @@ export class CodexBridge {
     this.ready=(async()=>{
       const sock=path.join(process.env.CODEX_HOME||path.join(os.homedir(),'.codex'),'app-server-control/app-server-control.sock');
       const shared=fs.existsSync(sock);
-      const binary=process.env.HORIZON_CODEX_BIN||path.join(os.homedir(),'.local/bin/codex');
+      const binary=findCodexBinary();
       this.mode=shared?'shared':'managed';
-      const child=spawn(binary,shared?['app-server','proxy','--sock',sock]:['app-server','--stdio'],{stdio:['pipe','pipe','pipe']});this.child=child;
+      const child=spawn(binary,shared?['app-server','proxy','--sock',sock]:['app-server'],{stdio:['pipe','pipe','pipe']});this.child=child;
       child.stdout.setEncoding('utf8');let buffer='';
       child.stdout.on('data',chunk=>{buffer+=chunk;let newline;while((newline=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,newline);buffer=buffer.slice(newline+1);let message;try{message=JSON.parse(line);}catch{continue;}
         if(message.method&&message.id!==undefined){

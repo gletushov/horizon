@@ -1,0 +1,38 @@
+name: Ошибка
+description: Что произошло и как это повторить
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: Не прикладывай ключи, личные заметки, полную рабочую папку или переписку с агентом. Скриншоты лучше сделать на демонстрационных данных.
+  - type: input
+    id: version
+    attributes:
+      label: Версия Horizon и macOS
+      description: Версию приложения можно посмотреть в Horizon → About Horizon.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги
+      description: С чего начать, что нажать и в какой момент появляется проблема.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемый результат
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Что произошло
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Скриншоты или запись экрана
+      description: Проверь, что на них нет личных данных.

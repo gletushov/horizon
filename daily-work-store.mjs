@@ -3,12 +3,15 @@ import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
-export const continuousNotePath='letushv/continuous-note.md';
+export const continuousNotePath='notes/continuous-note.md';
+// Existing workspaces keep their storage format; no files are moved.
+const legacyNotePath='letushv/continuous-note.md';
+function notePath(workspace){return !fs.existsSync(path.join(workspace.root,continuousNotePath))&&fs.existsSync(path.join(workspace.root,legacyNotePath))?legacyNotePath:continuousNotePath;}
 const notePattern=/<!-- horizon-note:([a-f0-9-]{36}) ([^\s]+) -->\n([\s\S]*?)\n<!-- \/horizon-note -->\n?/g;
 export function readNotes(workspace){
- let doc;try{doc=workspace.read(continuousNotePath);}catch(e){if(e.status!==404)throw e;}
+ const relative=notePath(workspace);let doc;try{doc=workspace.read(relative);}catch(e){if(e.status!==404)throw e;}
  const content=doc?.content||'',entries=[...content.matchAll(notePattern)].map(m=>({id:m[1],createdAt:m[2],text:m[3]}));
- return {path:continuousNotePath,revision:doc?.revision||null,entries,legacy:content.replace(notePattern,'').replace(/^# Заметки\s*/,'').trim()};
+ return {path:relative,revision:doc?.revision||null,entries,legacy:content.replace(notePattern,'').replace(/^# Заметки\s*/,'').trim()};
 }
 export function actNotes(workspace,input){
  if(!['add','edit'].includes(input.action)||!/^[a-f0-9-]{36}$/i.test(input.id||''))fail('Некорректная запись');
@@ -16,7 +19,7 @@ export function actNotes(workspace,input){
  const current=readNotes(workspace),old=current.entries.find(e=>e.id===input.id);
  if(input.action==='add'&&old){if(old.text!==input.text)fail('Эта запись уже сохранена с другим текстом',409);return current;}
  if(input.revision!==current.revision)fail('Заметка изменилась. Твой ввод сохранён; обнови страницу и повтори.',409);
- let content=current.revision?workspace.read(continuousNotePath).content:'# Заметки\n\n';
+ let content=current.revision?workspace.read(current.path).content:'# Заметки\n\n';
  if(input.action==='add'){
   const entry='<!-- horizon-note:'+input.id+' '+new Date().toISOString()+' -->\n'+input.text+'\n<!-- /horizon-note -->\n\n';
   const start=content.search(notePattern);if(start>=0)content=content.slice(0,start)+entry+content.slice(start);else content+=entry;
@@ -24,12 +27,12 @@ export function actNotes(workspace,input){
   if(!old)fail('Запись не найдена',404);
   content=content.replace(notePattern,(match,id,date)=>id===input.id?'<!-- horizon-note:'+id+' '+date+' -->\n'+input.text+'\n<!-- /horizon-note -->\n':match);
  }
- if(current.revision)workspace.save(continuousNotePath,current.revision,content);else workspace.create(continuousNotePath,content);
+ if(current.revision)workspace.save(current.path,current.revision,content);else workspace.create(current.path,content);
  return readNotes(workspace);
 }
 
 export function uploadImage(workspace,input){
- const target=workspace.target(input.path);let doc;try{doc=workspace.read(input.path);}catch(e){if(e.status!==404||input.path!==continuousNotePath)throw e;}if(doc?.format==='html')fail('HTML открыт для чтения');
+ const target=workspace.target(input.path);let doc;try{doc=workspace.read(input.path);}catch(e){if(e.status!==404||input.path!==notePath(workspace))throw e;}if(doc?.format==='html')fail('HTML открыт для чтения');
  if(typeof input.data!=='string'||!input.data.length||input.data.length>14000000||!/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))fail('Некорректное изображение');
  const bytes=Buffer.from(input.data,'base64');if(bytes.toString('base64')!==input.data)fail('Некорректное изображение');
  if(bytes.length>10000000)fail('Изображение больше 10 МБ',413);
